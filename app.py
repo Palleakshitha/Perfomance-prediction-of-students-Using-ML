@@ -1,42 +1,70 @@
-from flask import Flask, request, render_template
+import streamlit as st
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 
-application=Flask(__name__)
+# App title
+st.set_page_config(page_title="Student Performance Prediction")
+st.title("🎓 Student Performance Prediction")
 
-app=application
+st.write("Enter student details to predict performance")
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# ---- Input Fields ----
+gender = st.selectbox("Gender", ["male", "female"])
 
-@app.route('/predictdata', methods=['GET','POST'])
-def predict_datapoint():
-    if request.method =='GET':
-        return render_template('home.html')
-    else:
-        data=CustomData(
-            gender=request.form.get('gender'),
-            race_ethnicity=request.form.get('ethnicity'),
-            parental_level_of_education=request.form.get('parental_level_of_education'),
-            lunch=request.form.get('lunch'),
-            test_preparation_course=request.form.get('test_preparation_course'),
-            reading_score=float(request.form.get('writing_score')),
-            writing_score=float(request.form.get('reading_score'))
+ethnicity = st.selectbox(
+    "Race / Ethnicity",
+    ["group A", "group B", "group C", "group D", "group E"]
+)
 
+parental_level_of_education = st.selectbox(
+    "Parental Level of Education",
+    [
+        "some high school",
+        "high school",
+        "some college",
+        "associate's degree",
+        "bachelor's degree",
+        "master's degree"
+    ]
+)
+
+lunch = st.selectbox("Lunch", ["standard", "free/reduced"])
+
+test_preparation_course = st.selectbox(
+    "Test Preparation Course",
+    ["none", "completed"]
+)
+
+reading_score = st.number_input(
+    "Reading Score", min_value=0.0, max_value=100.0, step=1.0
+)
+
+writing_score = st.number_input(
+    "Writing Score", min_value=0.0, max_value=100.0, step=1.0
+)
+
+# ---- Prediction ----
+if st.button("Predict Performance"):
+    try:
+        data = CustomData(
+            gender=gender,
+            race_ethnicity=ethnicity,
+            parental_level_of_education=parental_level_of_education,
+            lunch=lunch,
+            test_preparation_course=test_preparation_course,
+            reading_score=reading_score,
+            writing_score=writing_score
         )
-        pred_df = data.get_data_as_data_frame()
-        print(pred_df)
 
-        print("Before Prediction")
+        pred_df = data.get_data_as_data_frame()
+
         predict_pipeline = PredictPipeline()
         results = predict_pipeline.predict(pred_df)
-        print("after prediction")
 
-        return render_template('home.html',results=results[0])
+        st.success(f"✅ Predicted Math Score: {results[0]}")
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=False, use_reloader=False)
+    except Exception as e:
+        st.error("Something went wrong during prediction")
+        st.write(e)
