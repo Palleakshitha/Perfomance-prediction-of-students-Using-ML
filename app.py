@@ -1,19 +1,17 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 
-# App title
 st.set_page_config(page_title="Student Performance Prediction")
 st.title("🎓 Student Performance Prediction")
 
-st.write("Enter student details to predict performance")
+st.write("Fill the student details to predict math score")
 
-# ---- Input Fields ----
+# ---------- INPUTS ----------
 gender = st.selectbox("Gender", ["male", "female"])
 
-ethnicity = st.selectbox(
+race_ethnicity = st.selectbox(
     "Race / Ethnicity",
     ["group A", "group B", "group C", "group D", "group E"]
 )
@@ -30,7 +28,7 @@ parental_level_of_education = st.selectbox(
     ]
 )
 
-lunch = st.selectbox("Lunch", ["standard", "free/reduced"])
+lunch = st.selectbox("Lunch Type", ["standard", "free/reduced"])
 
 test_preparation_course = st.selectbox(
     "Test Preparation Course",
@@ -38,19 +36,19 @@ test_preparation_course = st.selectbox(
 )
 
 reading_score = st.number_input(
-    "Reading Score", min_value=0.0, max_value=100.0, step=1.0
+    "Reading Score", min_value=0, max_value=100, value=50
 )
 
 writing_score = st.number_input(
-    "Writing Score", min_value=0.0, max_value=100.0, step=1.0
+    "Writing Score", min_value=0, max_value=100, value=50
 )
 
-# ---- Prediction ----
-if st.button("Predict Performance"):
+# ---------- PREDICTION ----------
+if st.button("Predict"):
     try:
         data = CustomData(
             gender=gender,
-            race_ethnicity=ethnicity,
+            race_ethnicity=race_ethnicity,
             parental_level_of_education=parental_level_of_education,
             lunch=lunch,
             test_preparation_course=test_preparation_course,
@@ -58,13 +56,13 @@ if st.button("Predict Performance"):
             writing_score=writing_score
         )
 
-        pred_df = data.get_data_as_data_frame()
+        final_df = data.get_data_as_data_frame()
 
         predict_pipeline = PredictPipeline()
-        results = predict_pipeline.predict(pred_df)
+        prediction = predict_pipeline.predict(final_df)
 
-        st.success(f"✅ Predicted Math Score: {results[0]}")
+        st.success(f"✅ Predicted Math Score: {prediction[0]}")
 
     except Exception as e:
-        st.error("Something went wrong during prediction")
-        st.write(e)
+        st.error("❌ Prediction failed")
+        st.exception(e)
